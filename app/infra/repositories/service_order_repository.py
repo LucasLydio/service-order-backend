@@ -16,7 +16,6 @@ class ServiceOrderRepository:
         order = ServiceOrder(customer_id=customer_id, title=title, description=description)
         self.db.add(order)
         self.db.commit()
-        self.db.refresh(order)
         return order
 
     def update(self, order_id: str, **kwargs) -> ServiceOrder:

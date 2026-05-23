@@ -19,7 +19,7 @@ A FastAPI backend for managing technical assistance service orders.
 ## Setup
 
 1. Clone the repository
-2. Copy `.env.example` to `.env` and update the database credentials
+2. Copy `.env.example` to `.env` and update the MySQL credentials
 3. Create a virtual environment:
    ```bash
    python -m venv venv
@@ -30,6 +30,7 @@ A FastAPI backend for managing technical assistance service orders.
    pip install -r requirements.txt
    ```
 5. Create the database
+   - The project uses MySQL 8.0+ with the `mysql+pymysql://` SQLAlchemy URL format.
 6. Run migrations:
    ```bash
    alembic revision --autogenerate -m "create initial tables"
@@ -42,7 +43,11 @@ A FastAPI backend for managing technical assistance service orders.
    ```bash
    python scripts/create_admin.py
    ```
-8. Run the application:
+8. If you want to create the initial demo data in one step, run:
+   ```bash
+   python scripts/bootstrap_database.py
+   ```
+9. Run the application:
    ```bash
    uvicorn app.main:app --reload
    ```

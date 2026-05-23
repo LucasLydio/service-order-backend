@@ -65,16 +65,41 @@ def upgrade() -> None:
         op.create_table(
             "customers",
             sa.Column("id", sa.String(length=36), primary_key=True),
-            sa.Column("user_id", sa.String(length=36), nullable=False),
-            sa.Column("phone", sa.String(length=20), nullable=True),
-            sa.Column("address", sa.String(length=255), nullable=True),
-            sa.Column("city", sa.String(length=100), nullable=True),
-            sa.Column("state", sa.String(length=2), nullable=True),
+            sa.Column("nome", sa.String(length=255), nullable=False),
+            sa.Column("cpf", sa.String(length=20), nullable=False),
+            sa.Column("telefone", sa.String(length=20), nullable=False),
+            sa.Column("email", sa.String(length=255), nullable=False),
+            sa.Column("endereco", sa.String(length=255), nullable=False),
             sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("CURRENT_TIMESTAMP")),
             sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True),
-            sa.ForeignKeyConstraint(["user_id"], ["users.id"]),
         )
-        op.create_index("ix_customers_user_id", "customers", ["user_id"], unique=False)
+        op.create_index("ix_customers_nome", "customers", ["nome"], unique=False)
+        op.create_index("ix_customers_cpf", "customers", ["cpf"], unique=True)
+        op.create_index("ix_customers_telefone", "customers", ["telefone"], unique=False)
+        op.create_index("ix_customers_email", "customers", ["email"], unique=True)
+
+    if _has_table(inspector, "customers"):
+        existing_columns = {column["name"] for column in inspector.get_columns("customers")}
+
+        for column_name, column_type in [
+            ("nome", sa.String(length=255)),
+            ("cpf", sa.String(length=20)),
+            ("telefone", sa.String(length=20)),
+            ("email", sa.String(length=255)),
+            ("endereco", sa.String(length=255)),
+        ]:
+            if column_name not in existing_columns:
+                op.add_column("customers", sa.Column(column_name, column_type, nullable=True))
+
+        existing_indexes = {index["name"] for index in inspector.get_indexes("customers")}
+        if "ix_customers_nome" not in existing_indexes:
+            op.create_index("ix_customers_nome", "customers", ["nome"], unique=False)
+        if "ix_customers_cpf" not in existing_indexes:
+            op.create_index("ix_customers_cpf", "customers", ["cpf"], unique=True)
+        if "ix_customers_telefone" not in existing_indexes:
+            op.create_index("ix_customers_telefone", "customers", ["telefone"], unique=False)
+        if "ix_customers_email" not in existing_indexes:
+            op.create_index("ix_customers_email", "customers", ["email"], unique=True)
 
     if not _has_table(inspector, "service_orders"):
         op.create_table(
@@ -99,7 +124,10 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_index("ix_service_orders_customer_id", table_name="service_orders")
     op.drop_table("service_orders")
-    op.drop_index("ix_customers_user_id", table_name="customers")
+    op.drop_index("ix_customers_email", table_name="customers")
+    op.drop_index("ix_customers_telefone", table_name="customers")
+    op.drop_index("ix_customers_cpf", table_name="customers")
+    op.drop_index("ix_customers_nome", table_name="customers")
     op.drop_table("customers")
     op.drop_index("ix_password_recovery_recovery_code", table_name="password_recovery")
     op.drop_table("password_recovery")

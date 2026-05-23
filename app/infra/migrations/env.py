@@ -22,6 +22,8 @@ from app.infra.models.user_model import User  # noqa: F401,E402
 from app.infra.models.password_recovery_model import PasswordRecovery  # noqa: F401,E402
 from app.infra.models.customer_model import Customer  # noqa: F401,E402
 from app.infra.models.service_order_model import ServiceOrder  # noqa: F401,E402
+from app.infra.models.technician_model import Technician  # noqa: F401,E402
+from app.infra.models.part_model import Part  # noqa: F401,E402
 
 target_metadata = Base.metadata
 

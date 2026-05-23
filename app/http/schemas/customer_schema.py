@@ -1,30 +1,34 @@
-from pydantic import BaseModel
+from typing import Optional
+
+from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 
 
 class CustomerCreateSchema(BaseModel):
-    phone: str = None
-    address: str = None
-    city: str = None
-    state: str = None
+    nome: str = Field(..., min_length=2, max_length=255)
+    cpf: str = Field(..., min_length=11, max_length=20)
+    telefone: str = Field(..., min_length=8, max_length=20)
+    email: EmailStr
+    endereco: str = Field(..., min_length=5, max_length=255)
 
 
 class CustomerUpdateSchema(BaseModel):
-    phone: str = None
-    address: str = None
-    city: str = None
-    state: str = None
+    nome: Optional[str] = Field(default=None, min_length=2, max_length=255)
+    cpf: Optional[str] = Field(default=None, min_length=11, max_length=20)
+    telefone: Optional[str] = Field(default=None, min_length=8, max_length=20)
+    email: Optional[EmailStr] = None
+    endereco: Optional[str] = Field(default=None, min_length=5, max_length=255)
 
 
 class CustomerResponseSchema(BaseModel):
     id: str
-    user_id: str
-    phone: str = None
-    address: str = None
-    city: str = None
-    state: str = None
+    nome: str
+    cpf: str
+    telefone: str
+    email: str
+    endereco: str
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True

@@ -30,6 +30,14 @@ class UserNotFoundException(HTTPException):
         )
 
 
+class CustomerNotFoundException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Customer not found"
+        )
+
+
 class UnauthorizedException(HTTPException):
     def __init__(self):
         super().__init__(
