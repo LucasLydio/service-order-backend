@@ -60,3 +60,19 @@ class InvalidTokenException(HTTPException):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token"
         )
+
+
+class ExternalIntegrationException(HTTPException):
+    def __init__(self, message: str = "External integration error"):
+        super().__init__(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=message
+        )
+
+
+class CepNotFoundException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="CEP not found"
+        )

@@ -9,7 +9,10 @@ class CustomerCreateSchema(BaseModel):
     cpf: str = Field(..., min_length=11, max_length=20)
     telefone: str = Field(..., min_length=8, max_length=20)
     email: EmailStr
-    endereco: str = Field(..., min_length=5, max_length=255)
+    endereco: Optional[str] = Field(default=None, min_length=5, max_length=255)
+    cep: Optional[str] = Field(default=None, min_length=8, max_length=9)
+    numero: Optional[str] = Field(default=None, max_length=20)
+    complemento: Optional[str] = Field(default=None, max_length=50)
 
 
 class CustomerUpdateSchema(BaseModel):
@@ -18,6 +21,9 @@ class CustomerUpdateSchema(BaseModel):
     telefone: Optional[str] = Field(default=None, min_length=8, max_length=20)
     email: Optional[EmailStr] = None
     endereco: Optional[str] = Field(default=None, min_length=5, max_length=255)
+    cep: Optional[str] = Field(default=None, min_length=8, max_length=9)
+    numero: Optional[str] = Field(default=None, max_length=20)
+    complemento: Optional[str] = Field(default=None, max_length=50)
 
 
 class CustomerResponseSchema(BaseModel):
