@@ -76,35 +76,3 @@ class CepNotFoundException(HTTPException):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="CEP not found"
         )
-
-
-class PartNotFoundException(HTTPException):
-    def __init__(self):
-        super().__init__(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Part not found"
-        )
-
-
-class InsufficientStockException(HTTPException):
-    def __init__(self, part_name: str):
-        super().__init__(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Insufficient stock for part '{part_name}'"
-        )
-
-
-class TechnicianOrderLimitException(HTTPException):
-    def __init__(self):
-        super().__init__(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Technician already has 5 orders in progress"
-        )
-
-
-class CancellationReasonRequiredException(HTTPException):
-    def __init__(self):
-        super().__init__(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Cancellation reason is required"
-        )

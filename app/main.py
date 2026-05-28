@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.http.routes import auth_routes, customer_routes, service_order_routes, part_routes
+from app.http.routes import auth_routes, customer_routes, service_order_routes
 from app.infra.database.base import Base
 from app.infra.database.session import engine
 from app.infra.models.user_model import User  # noqa: F401
@@ -9,19 +9,17 @@ from app.infra.models.customer_model import Customer  # noqa: F401
 from app.infra.models.service_order_model import ServiceOrder  # noqa: F401
 from app.infra.models.technician_model import Technician  # noqa: F401
 from app.infra.models.part_model import Part  # noqa: F401
-from app.infra.models.order_part_model import OrderPart  # noqa: F401
-from app.infra.models.history_model import History  # noqa: F401
 
-# Cria as tabelas no banco de dados
+# Create tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Service Order Management API",
-    description="API para gerenciamento de ordens de serviço técnicas",
+    description="API for managing technical assistance service orders",
     version="1.0.0"
 )
 
-# Configuração do CORS
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -30,11 +28,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Registro das rotas
+# Include routers
 app.include_router(auth_routes.router)
 app.include_router(customer_routes.router)
 app.include_router(service_order_routes.router)
-app.include_router(part_routes.router)
 
 
 @app.get("/health")

@@ -18,13 +18,11 @@ class ServiceOrder(Base):
 
     id = Column(String(36), primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
     customer_id = Column(String(36), ForeignKey("customers.id"), nullable=False)
-    technician_id = Column(String(36), ForeignKey("technicians.id"), nullable=True)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     status = Column(Enum(ServiceOrderStatus), default=ServiceOrderStatus.PENDING)
-    cancellation_reason = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     def __repr__(self):
-        return f"<ServiceOrder(id={self.id}, customer_id={self.customer_id}, status={self.status})>"
+        return f"<ServiceOrder(id={self.id}, customer_id={self.customer_id})>"
