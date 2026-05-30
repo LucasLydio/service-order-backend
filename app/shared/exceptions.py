@@ -76,3 +76,27 @@ class CepNotFoundException(HTTPException):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="CEP not found"
         )
+
+
+class ServiceOrderNotFoundException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Service order not found"
+        )
+
+
+class CompletedOrderNotEditableException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Completed orders cannot be edited"
+        )
+
+
+class OrderWithoutTechnicianException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot complete an order without an assigned technician"
+        )
