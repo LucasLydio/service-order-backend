@@ -38,6 +38,22 @@ class CustomerNotFoundException(HTTPException):
         )
 
 
+class PartNotFoundException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Part not found"
+        )
+
+
+class InsufficientStockException(HTTPException):
+    def __init__(self, part_name: str):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Insufficient stock for part: {part_name}"
+        )
+
+
 class UnauthorizedException(HTTPException):
     def __init__(self):
         super().__init__(

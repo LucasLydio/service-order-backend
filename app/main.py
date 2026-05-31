@@ -9,6 +9,8 @@ from app.infra.models.customer_model import Customer  # noqa: F401
 from app.infra.models.service_order_model import ServiceOrder  # noqa: F401
 from app.infra.models.technician_model import Technician  # noqa: F401
 from app.infra.models.part_model import Part  # noqa: F401
+from app.http.routes.reports_routes import router as reports_router
+
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -42,3 +44,8 @@ def health_check():
 @app.get("/")
 def root():
     return {"message": "Service Order Management API"}
+
+
+
+
+app.include_router(reports_router)
