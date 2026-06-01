@@ -15,10 +15,10 @@ class ServiceOrderRepository:
     def find_by_technician_id(self, technician_id: str) -> list:
         return self.db.query(ServiceOrder).filter(ServiceOrder.technician_id == technician_id).all()
 
-    def create(self, customer_id: str, title: str, description: str = None, priority: str = "MEDIA") -> ServiceOrder:
+    def create(self, customer_id: str, equipment: str, description: str = None, priority: str = "MEDIA") -> ServiceOrder:
         order = ServiceOrder(
             customer_id=customer_id,
-            title=title,
+            equipment=equipment,
             description=description,
             priority=ServiceOrderPriority(priority),
         )

@@ -106,8 +106,9 @@ def upgrade() -> None:
             "service_orders",
             sa.Column("id", sa.String(length=36), primary_key=True),
             sa.Column("customer_id", sa.String(length=36), nullable=False),
-            sa.Column("title", sa.String(length=255), nullable=False),
+            sa.Column("equipment", sa.String(length=255), nullable=False),
             sa.Column("description", sa.Text(), nullable=True),
+            sa.Column("cancellation_reason", sa.Text(), nullable=True),
             sa.Column(
                 "status",
                 sa.Enum("pending", "in_progress", "completed", "cancelled", name="serviceorderstatus"),

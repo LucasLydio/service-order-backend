@@ -22,8 +22,9 @@ def _serialize_order(order):
         "id": order.id,
         "customer_id": order.customer_id,
         "technician_id": order.technician_id,
-        "title": order.title,
+        "equipment": order.equipment,
         "description": order.description,
+        "cancellation_reason": order.cancellation_reason,
         "status": getattr(order.status, "value", str(order.status)),
         "priority": getattr(order.priority, "value", str(order.priority)),
         "created_at": order.created_at,
@@ -40,7 +41,7 @@ def create_service_order(
 ):
     service = ServiceOrderService(db)
     order = service.create_service_order(
-        str(customer_id), data.title, data.description, data.priority
+        str(customer_id), data.equipment, data.description, data.priority
     )
     return success_response("Service order created", _serialize_order(order))
 

@@ -1,0 +1,911 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "🛠️ Service Order API",
+		"description": "Coleção completa da API de Gerenciamento de Ordens de Serviço.\n\n## Como usar\n\n1. **Configure o ambiente**: Defina a variável `base_url` (padrão: http://localhost:8000)\n2. **Faça login**: Execute a request \"Login\" na pasta Auth\n3. **Token automático**: O token JWT será salvo automaticamente na variável `auth_token`\n4. **Teste os endpoints**: Todas as requests protegidas já usam o token salvo\n\n## Perfis de teste\n- **Admin**: admin@email.com / SenhaSegura123\n- **Manager**: manager@email.com / SenhaSegura123\n- **Client**: client@email.com / SenhaSegura123",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "customer_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "order_id",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "🏥 Health Check",
+			"item": [
+				{
+					"name": "Root - Boas-vindas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": ["{{base_url}}"],
+							"path": [""]
+						},
+						"description": "Endpoint raiz da API. Retorna mensagem de boas-vindas confirmando que o servidor está rodando."
+					},
+					"response": [
+						{
+							"name": "200 - Sucesso",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"message\": \"Service Order Management API\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": ["{{base_url}}"],
+							"path": ["health"]
+						},
+						"description": "Verifica se o servidor está saudável e respondendo. Útil para monitoramento e load balancers."
+					},
+					"response": [
+						{
+							"name": "200 - Servidor OK",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"status\": \"ok\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "🔐 Auth",
+			"description": "Endpoints de autenticação: registro, login, recuperação de senha e perfil do usuário logado.",
+			"item": [
+				{
+					"name": "Registrar Usuário",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"novo.usuario@email.com\",\n  \"password\": \"MinhaSenh@123\",\n  \"full_name\": \"João da Silva\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "register"]
+						},
+						"description": "Cria uma nova conta de usuário no sistema. O usuário é criado com o perfil `client` por padrão.\n\n**Campos obrigatórios:**\n- `email` — E-mail válido (único no sistema)\n- `password` — Senha do usuário\n\n**Campos opcionais:**\n- `full_name` — Nome completo do usuário"
+					},
+					"response": [
+						{
+							"name": "200 - Registro bem-sucedido",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"success\": true,\n  \"message\": \"User registered successfully\",\n  \"data\": {\n    \"id\": \"f47ac10b-58cc-4372-a567-0e02b2c3d479\",\n    \"email\": \"novo.usuario@email.com\"\n  },\n  \"error\": null\n}"
+						},
+						{
+							"name": "409 - Usuário já existe",
+							"status": "Conflict",
+							"code": 409,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"detail\": \"User already exists\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.success && jsonData.data && jsonData.data.access_token) {",
+									"    pm.collectionVariables.set('auth_token', jsonData.data.access_token);",
+									"    console.log('Token salvo com sucesso!');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@email.com\",\n  \"password\": \"SenhaSegura123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Autentica o usuário e retorna um token JWT.\n\n**O token é salvo automaticamente** na variável `auth_token` da coleção para uso nos demais endpoints.\n\n**Credenciais de teste (após rodar seed):**\n- Admin: `admin@email.com` / `SenhaSegura123`\n- Manager: `manager@email.com` / `SenhaSegura123`\n- Client: `client@email.com` / `SenhaSegura123`"
+					},
+					"response": [
+						{
+							"name": "200 - Login bem-sucedido",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n      \"email\": \"admin@email.com\",\n      \"full_name\": \"Admin\",\n      \"role\": \"admin\"\n    },\n    \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhMWIyYzNkNC1lNWY2LTc4OTAtYWJjZC1lZjEyMzQ1Njc4OTAiLCJlbWFpbCI6ImFkbWluQGVtYWlsLmNvbSIsInJvbGUiOiJhZG1pbiIsImV4cCI6MTcxNzAyNzIwMH0.signature\",\n    \"token_type\": \"bearer\"\n  },\n  \"error\": null\n}"
+						},
+						{
+							"name": "401 - Credenciais inválidas",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"detail\": \"Invalid credentials\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Solicitar Recuperação de Senha",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@email.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/password-recovery/request",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "password-recovery", "request"]
+						},
+						"description": "Gera um código de recuperação de 6 dígitos vinculado ao e-mail informado. O código expira em 1 hora.\n\n**Nota:** A resposta é genérica por segurança — não revela se o e-mail existe ou não no sistema."
+					},
+					"response": [
+						{
+							"name": "200 - Solicitação recebida",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Recovery code sent to email\",\n  \"data\": null,\n  \"error\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "Confirmar Recuperação de Senha",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@email.com\",\n  \"code\": \"123456\",\n  \"new_password\": \"NovaSenha@456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/password-recovery/confirm",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "password-recovery", "confirm"]
+						},
+						"description": "Valida o código de recuperação e redefine a senha do usuário.\n\n**Validações:**\n- O código deve existir e não ter sido usado anteriormente\n- O código não pode estar expirado (validade de 1 hora)\n- O e-mail deve corresponder ao usuário que solicitou a recuperação"
+					},
+					"response": [
+						{
+							"name": "200 - Senha redefinida",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Password updated successfully\",\n  \"data\": null,\n  \"error\": null\n}"
+						},
+						{
+							"name": "401 - Código inválido ou expirado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"detail\": \"Invalid credentials\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Meu Perfil (Me)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/me",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "me"]
+						},
+						"description": "Retorna os dados do usuário atualmente autenticado pelo token JWT.\n\n**Requer:** Token JWT válido no header Authorization."
+					},
+					"response": [
+						{
+							"name": "200 - Perfil do usuário",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"success\": true,\n  \"message\": \"User retrieved successfully\",\n  \"data\": {\n    \"id\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n    \"email\": \"admin@email.com\",\n    \"full_name\": \"Admin\",\n    \"role\": \"admin\"\n  },\n  \"error\": null\n}"
+						},
+						{
+							"name": "401 - Não autenticado",
+							"status": "Unauthorized",
+							"code": 401,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"detail\": \"Unauthorized\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "👥 Customers (Clientes)",
+			"description": "CRUD completo de clientes com integração ViaCEP para preenchimento automático de endereço.\n\n**Permissões:**\n- Criar, listar, buscar, editar: `admin`, `manager`\n- Excluir: apenas `admin`",
+			"item": [
+				{
+					"name": "Criar Cliente (com CEP - ViaCEP)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.success && jsonData.data && jsonData.data.id) {",
+									"    pm.collectionVariables.set('customer_id', jsonData.data.id);",
+									"    console.log('customer_id salvo: ' + jsonData.data.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Maria Silva Santos\",\n  \"cpf\": \"12345678901\",\n  \"telefone\": \"11999887766\",\n  \"email\": \"maria.santos@email.com\",\n  \"cep\": \"01001000\",\n  \"numero\": \"150\",\n  \"complemento\": \"Sala 302\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/customers/",
+							"host": ["{{base_url}}"],
+							"path": ["customers", ""]
+						},
+						"description": "Cadastra um novo cliente no sistema.\n\n**Integração ViaCEP:** Se o campo `cep` for informado, o endereço é consultado automaticamente na API do ViaCEP e formatado como:\n`Logradouro, Número - Complemento - Bairro, Cidade - UF`\n\n**Campos obrigatórios:**\n- `nome` (2-255 caracteres)\n- `cpf` (11-20 caracteres, único)\n- `telefone` (8-20 caracteres)\n- `email` (e-mail válido, único)\n- `endereco` OU `cep` (pelo menos um deve ser informado)\n\n**Campos opcionais:**\n- `cep` (8-9 caracteres) — ativa consulta ViaCEP\n- `numero` (até 20 caracteres)\n- `complemento` (até 50 caracteres)\n- `endereco` (5-255 caracteres) — endereço manual\n\n**Permissões:** `admin`, `manager`"
+					},
+					"response": [
+						{
+							"name": "200 - Cliente criado com sucesso",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Customer created successfully\",\n  \"data\": {\n    \"id\": \"c1d2e3f4-a5b6-7890-cdef-123456789012\",\n    \"nome\": \"Maria Silva Santos\",\n    \"cpf\": \"12345678901\",\n    \"telefone\": \"11999887766\",\n    \"email\": \"maria.santos@email.com\",\n    \"endereco\": \"Praça da Sé, 150 - Sala 302 - Sé, São Paulo - SP\",\n    \"created_at\": \"2026-05-27T23:00:00\",\n    \"updated_at\": null\n  },\n  \"error\": null\n}"
+						},
+						{
+							"name": "404 - CEP não encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"detail\": \"CEP not found\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Criar Cliente (com endereço manual)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Carlos Oliveira\",\n  \"cpf\": \"98765432100\",\n  \"telefone\": \"21988776655\",\n  \"email\": \"carlos.oliveira@email.com\",\n  \"endereco\": \"Rua das Flores, 42 - Centro, Rio de Janeiro - RJ\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/customers/",
+							"host": ["{{base_url}}"],
+							"path": ["customers", ""]
+						},
+						"description": "Cadastra um cliente informando o endereço completo manualmente, sem consultar o ViaCEP."
+					},
+					"response": [
+						{
+							"name": "200 - Cliente criado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Customer created successfully\",\n  \"data\": {\n    \"id\": \"d4e5f6a7-b8c9-0123-def4-567890abcdef\",\n    \"nome\": \"Carlos Oliveira\",\n    \"cpf\": \"98765432100\",\n    \"telefone\": \"21988776655\",\n    \"email\": \"carlos.oliveira@email.com\",\n    \"endereco\": \"Rua das Flores, 42 - Centro, Rio de Janeiro - RJ\",\n    \"created_at\": \"2026-05-27T23:05:00\",\n    \"updated_at\": null\n  },\n  \"error\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "Listar Todos os Clientes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"url": {
+							"raw": "{{base_url}}/customers/",
+							"host": ["{{base_url}}"],
+							"path": ["customers", ""]
+						},
+						"description": "Lista todos os clientes cadastrados, ordenados por nome (ASC).\n\n**Permissões:** `admin`, `manager`"
+					},
+					"response": [
+						{
+							"name": "200 - Lista de clientes",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Customers retrieved successfully\",\n  \"data\": [\n    {\n      \"id\": \"c1d2e3f4-a5b6-7890-cdef-123456789012\",\n      \"nome\": \"Maria Silva Santos\",\n      \"cpf\": \"12345678901\",\n      \"telefone\": \"11999887766\",\n      \"email\": \"maria.santos@email.com\",\n      \"endereco\": \"Praça da Sé, 150 - Sala 302 - Sé, São Paulo - SP\",\n      \"created_at\": \"2026-05-27T23:00:00\",\n      \"updated_at\": null\n    }\n  ],\n  \"error\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "Buscar Clientes (por nome)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"url": {
+							"raw": "{{base_url}}/customers/?nome=Maria",
+							"host": ["{{base_url}}"],
+							"path": ["customers", ""],
+							"query": [
+								{"key": "nome", "value": "Maria"}
+							]
+						},
+						"description": "Busca clientes por nome usando correspondência parcial (LIKE).\n\n**Filtros disponíveis (query params):**\n- `nome` — busca por nome\n- `cpf` — busca por CPF\n- `email` — busca por e-mail\n- `telefone` — busca por telefone\n\nA busca usa lógica **OR** (retorna resultados que correspondem a qualquer filtro)."
+					},
+					"response": [
+						{
+							"name": "200 - Resultados da busca",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Customers retrieved successfully\",\n  \"data\": [\n    {\n      \"id\": \"c1d2e3f4-a5b6-7890-cdef-123456789012\",\n      \"nome\": \"Maria Silva Santos\",\n      \"cpf\": \"12345678901\",\n      \"telefone\": \"11999887766\",\n      \"email\": \"maria.santos@email.com\",\n      \"endereco\": \"Praça da Sé, 150 - Sala 302 - Sé, São Paulo - SP\",\n      \"created_at\": \"2026-05-27T23:00:00\",\n      \"updated_at\": null\n    }\n  ],\n  \"error\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "Buscar Clientes (por CPF)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"url": {
+							"raw": "{{base_url}}/customers/?cpf=12345678901",
+							"host": ["{{base_url}}"],
+							"path": ["customers", ""],
+							"query": [
+								{"key": "cpf", "value": "12345678901"}
+							]
+						},
+						"description": "Busca clientes por CPF usando correspondência parcial."
+					},
+					"response": [
+						{
+							"name": "200 - Resultado por CPF",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Customers retrieved successfully\",\n  \"data\": [\n    {\n      \"id\": \"c1d2e3f4-a5b6-7890-cdef-123456789012\",\n      \"nome\": \"Maria Silva Santos\",\n      \"cpf\": \"12345678901\",\n      \"telefone\": \"11999887766\",\n      \"email\": \"maria.santos@email.com\",\n      \"endereco\": \"Praça da Sé, 150 - Sala 302 - Sé, São Paulo - SP\",\n      \"created_at\": \"2026-05-27T23:00:00\",\n      \"updated_at\": null\n    }\n  ],\n  \"error\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "Buscar Cliente por ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"url": {
+							"raw": "{{base_url}}/customers/{{customer_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["customers", "{{customer_id}}"]
+						},
+						"description": "Retorna os dados de um cliente específico pelo seu UUID.\n\n**Permissões:** `admin`, `manager`"
+					},
+					"response": [
+						{
+							"name": "200 - Cliente encontrado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Customer retrieved successfully\",\n  \"data\": {\n    \"id\": \"c1d2e3f4-a5b6-7890-cdef-123456789012\",\n    \"nome\": \"Maria Silva Santos\",\n    \"cpf\": \"12345678901\",\n    \"telefone\": \"11999887766\",\n    \"email\": \"maria.santos@email.com\",\n    \"endereco\": \"Praça da Sé, 150 - Sala 302 - Sé, São Paulo - SP\",\n    \"created_at\": \"2026-05-27T23:00:00\",\n    \"updated_at\": null\n  },\n  \"error\": null\n}"
+						},
+						{
+							"name": "404 - Cliente não encontrado",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"detail\": \"Customer not found\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Atualizar Cliente",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"telefone\": \"11988776655\",\n  \"cep\": \"04538133\",\n  \"numero\": \"200\",\n  \"complemento\": \"Andar 10\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/customers/{{customer_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["customers", "{{customer_id}}"]
+						},
+						"description": "Atualiza parcialmente os dados de um cliente. Apenas os campos enviados serão modificados.\n\nSe `cep` for informado, o endereço é atualizado automaticamente via ViaCEP.\n\n**Permissões:** `admin`, `manager`"
+					},
+					"response": [
+						{
+							"name": "200 - Cliente atualizado",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Customer updated successfully\",\n  \"data\": {\n    \"id\": \"c1d2e3f4-a5b6-7890-cdef-123456789012\",\n    \"nome\": \"Maria Silva Santos\",\n    \"cpf\": \"12345678901\",\n    \"telefone\": \"11988776655\",\n    \"email\": \"maria.santos@email.com\",\n    \"endereco\": \"Rua Funchal, 200 - Andar 10 - Vila Olímpia, São Paulo - SP\",\n    \"created_at\": \"2026-05-27T23:00:00\",\n    \"updated_at\": \"2026-05-27T23:10:00\"\n  },\n  \"error\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "Excluir Cliente",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"url": {
+							"raw": "{{base_url}}/customers/{{customer_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["customers", "{{customer_id}}"]
+						},
+						"description": "Exclui um cliente e todas as suas ordens de serviço associadas.\n\n**⚠️ Atenção:** Esta ação é irreversível.\n\n**Permissões:** apenas `admin`"
+					},
+					"response": [
+						{
+							"name": "200 - Cliente excluído",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Customer deleted successfully\",\n  \"data\": null,\n  \"error\": null\n}"
+						},
+						{
+							"name": "403 - Sem permissão",
+							"status": "Forbidden",
+							"code": 403,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"detail\": {\n    \"code\": \"FORBIDDEN\",\n    \"message\": \"You don't have permission to access this resource\"\n  }\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "🛠️ Service Orders (Ordens de Serviço)",
+			"description": "Gerenciamento de ordens de serviço.\n\n**Status possíveis:** PENDING → IN_PROGRESS → COMPLETED | CANCELLED\n\n**Permissões:**\n- Criar, editar: `admin`, `manager`\n- Consultar: `admin`, `manager`, `client`\n- Excluir: apenas `admin`",
+			"item": [
+				{
+					"name": "Criar Ordem de Serviço",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.success && jsonData.data && jsonData.data.id) {",
+									"    pm.collectionVariables.set('order_id', jsonData.data.id);",
+									"    console.log('order_id salvo: ' + jsonData.data.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Troca de tela - iPhone 14\",\n  \"description\": \"Cliente relata tela trincada após queda. Necessário substituir display LCD e touch.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/service-orders/?customer_id={{customer_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["service-orders", ""],
+							"query": [
+								{"key": "customer_id", "value": "{{customer_id}}"}
+							]
+						},
+						"description": "Abre uma nova ordem de serviço vinculada a um cliente existente.\n\n**O `customer_id` é passado como query parameter.**\n\nA ordem é criada com status `PENDING` por padrão.\n\n**Campos obrigatórios:**\n- `title` — Título/resumo do serviço\n\n**Campos opcionais:**\n- `description` — Descrição detalhada do problema\n\n**Permissões:** `admin`, `manager`"
+					},
+					"response": [
+						{
+							"name": "200 - Ordem criada",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Service order created successfully\",\n  \"data\": {\n    \"id\": \"e5f6a7b8-c9d0-1234-ef56-7890abcdef12\"\n  },\n  \"error\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "Consultar Ordem por ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"url": {
+							"raw": "{{base_url}}/service-orders/{{order_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["service-orders", "{{order_id}}"]
+						},
+						"description": "Retorna os detalhes de uma ordem de serviço específica.\n\n**Permissões:** `admin`, `manager`, `client`"
+					},
+					"response": [
+						{
+							"name": "200 - Ordem encontrada",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Service order retrieved successfully\",\n  \"data\": {\n    \"id\": \"e5f6a7b8-c9d0-1234-ef56-7890abcdef12\",\n    \"customer_id\": \"c1d2e3f4-a5b6-7890-cdef-123456789012\",\n    \"title\": \"Troca de tela - iPhone 14\",\n    \"description\": \"Cliente relata tela trincada após queda. Necessário substituir display LCD e touch.\",\n    \"status\": \"PENDING\",\n    \"created_at\": \"2026-05-27T23:15:00\",\n    \"updated_at\": null\n  },\n  \"error\": null\n}"
+						},
+						{
+							"name": "404 - Ordem não encontrada",
+							"status": "Not Found",
+							"code": 404,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"detail\": \"User not found\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Atualizar Ordem (Mudar Status)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"IN_PROGRESS\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/service-orders/{{order_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["service-orders", "{{order_id}}"]
+						},
+						"description": "Atualiza os dados de uma ordem de serviço. Pode ser usado para alterar título, descrição ou status.\n\n**Status válidos:**\n- `PENDING` — Pendente (padrão na criação)\n- `IN_PROGRESS` — Em andamento\n- `COMPLETED` — Concluída\n- `CANCELLED` — Cancelada\n\n**Permissões:** `admin`, `manager`"
+					},
+					"response": [
+						{
+							"name": "200 - Ordem atualizada",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Service order updated successfully\",\n  \"data\": {\n    \"id\": \"e5f6a7b8-c9d0-1234-ef56-7890abcdef12\"\n  },\n  \"error\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "Atualizar Ordem (Concluir)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"COMPLETED\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/service-orders/{{order_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["service-orders", "{{order_id}}"]
+						},
+						"description": "Marca uma ordem de serviço como concluída."
+					},
+					"response": [
+						{
+							"name": "200 - Ordem concluída",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Service order updated successfully\",\n  \"data\": {\n    \"id\": \"e5f6a7b8-c9d0-1234-ef56-7890abcdef12\"\n  },\n  \"error\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "Excluir Ordem de Serviço",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"url": {
+							"raw": "{{base_url}}/service-orders/{{order_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["service-orders", "{{order_id}}"]
+						},
+						"description": "Exclui permanentemente uma ordem de serviço.\n\n**⚠️ Atenção:** Esta ação é irreversível.\n\n**Permissões:** apenas `admin`"
+					},
+					"response": [
+						{
+							"name": "200 - Ordem excluída",
+							"status": "OK",
+							"code": 200,
+							"header": [
+								{"key": "Content-Type", "value": "application/json"}
+							],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Service order deleted successfully\",\n  \"data\": null,\n  \"error\": null\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "⚠️ Fluxo Completo (Passo a Passo)",
+			"description": "Execute estas requests em ordem para testar o fluxo completo da aplicação:\n\n1. Login como admin\n2. Criar cliente\n3. Criar ordem de serviço\n4. Consultar ordem\n5. Atualizar status para IN_PROGRESS\n6. Atualizar status para COMPLETED\n\nAs variáveis são salvas automaticamente entre os passos.",
+			"item": [
+				{
+					"name": "1. Login (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.success && jsonData.data && jsonData.data.access_token) {",
+									"    pm.collectionVariables.set('auth_token', jsonData.data.access_token);",
+									"    console.log('✅ Token salvo!');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@email.com\",\n  \"password\": \"change-me\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Criar Cliente",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.success && jsonData.data && jsonData.data.id) {",
+									"    pm.collectionVariables.set('customer_id', jsonData.data.id);",
+									"    console.log('✅ customer_id salvo: ' + jsonData.data.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"João Teste\",\n  \"cpf\": \"11122233344\",\n  \"telefone\": \"11999001122\",\n  \"email\": \"joao.teste@email.com\",\n  \"cep\": \"01310100\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/customers/",
+							"host": ["{{base_url}}"],
+							"path": ["customers", ""]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Criar Ordem de Serviço",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.success && jsonData.data && jsonData.data.id) {",
+									"    pm.collectionVariables.set('order_id', jsonData.data.id);",
+									"    console.log('✅ order_id salvo: ' + jsonData.data.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Reparo em notebook Dell\",\n  \"description\": \"Notebook não liga. Possível problema na placa-mãe.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/service-orders/?customer_id={{customer_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["service-orders", ""],
+							"query": [
+								{"key": "customer_id", "value": "{{customer_id}}"}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4. Consultar Ordem Criada",
+					"request": {
+						"method": "GET",
+						"header": [
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"url": {
+							"raw": "{{base_url}}/service-orders/{{order_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["service-orders", "{{order_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5. Iniciar Atendimento (→ IN_PROGRESS)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"IN_PROGRESS\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/service-orders/{{order_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["service-orders", "{{order_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "6. Concluir Ordem (→ COMPLETED)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{auth_token}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"COMPLETED\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/service-orders/{{order_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["service-orders", "{{order_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

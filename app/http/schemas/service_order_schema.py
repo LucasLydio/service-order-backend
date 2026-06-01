@@ -4,14 +4,15 @@ from datetime import datetime
 
 
 class ServiceOrderCreateSchema(BaseModel):
-    title: str = Field(..., min_length=3, max_length=255)
+    equipment: str = Field(..., min_length=3, max_length=255)
     description: Optional[str] = None
     priority: Optional[str] = Field(default="MEDIA")
 
 
 class ServiceOrderUpdateSchema(BaseModel):
-    title: Optional[str] = Field(default=None, min_length=3, max_length=255)
+    equipment: Optional[str] = Field(default=None, min_length=3, max_length=255)
     description: Optional[str] = None
+    cancellation_reason: Optional[str] = None
     priority: Optional[str] = None
 
 
@@ -23,8 +24,9 @@ class ServiceOrderResponseSchema(BaseModel):
     id: str
     customer_id: str
     technician_id: Optional[str] = None
-    title: str
+    equipment: str
     description: Optional[str] = None
+    cancellation_reason: Optional[str] = None
     status: str
     priority: str
     created_at: datetime

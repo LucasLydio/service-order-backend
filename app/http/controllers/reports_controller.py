@@ -36,3 +36,11 @@ def get_orders_by_status(db: Session = Depends(get_db)) -> StandardResponse:
         "Orders by status report generated",
         repo.get_service_orders_by_status(),
     )
+
+
+def get_late_orders(db: Session = Depends(get_db)) -> StandardResponse:
+    repo = ReportsRepository(db)
+    return success_response(
+        "Late orders report generated",
+        repo.get_late_orders(),
+    )

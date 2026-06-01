@@ -1,5 +1,6 @@
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+from datetime import datetime, timedelta, timezone
 
 from app.infra.models.order_part_model import OrderPart
 from app.infra.models.part_model import Part
@@ -89,4 +90,22 @@ class ReportsRepository:
                 "total_orders": int(row.total_orders or 0),
             }
             for row in result
+        ]
+
+    def get_late_orders(self) -> list[dict]:
+        threshold = datetime.now(timezone.utc) - timedelta(days=5)
+        result = (
+            self.db.query(ServiceOrder)
+            .filter(ServiceOrder.status.in_([ServiceOrderStatus.PENDING, ServiceOrderStatus.IN_PROGRESS]))
+            .filter(ServiceOrder.created_at < threshold)
+            .all()
+        )
+        return [
+            {
+                "id": str(order.id),
+                "equipment": order.equipment,
+                "status": getattr(order.status, "value", str(order.status)),
+                "created_at": order.created_at.isoformat() if order.created_at else None,
+            }
+            for order in result
         ]

@@ -40,5 +40,5 @@ def test_completed_order_cannot_be_edited():
     with pytest.raises(CompletedOrderNotEditableException):
         service.update_service_order(
             "123",
-            title="Novo Titulo"
+            equipment="Novo Equipamento"
         )

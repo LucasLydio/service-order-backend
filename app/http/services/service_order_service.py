@@ -30,11 +30,11 @@ class ServiceOrderService:
                 detail=f"Invalid status. Allowed values: {', '.join(allowed)}"
             )
 
-    def create_service_order(self, customer_id: str, title: str, description: str = None, priority: str = "MEDIA"):
+    def create_service_order(self, customer_id: str, equipment: str, description: str = None, priority: str = "MEDIA"):
         self._validate_priority(priority)
         return self.repo.create(
             customer_id=customer_id,
-            title=title,
+            equipment=equipment,
             description=description,
             priority=priority,
         )
@@ -68,6 +68,14 @@ class ServiceOrderService:
                 if not order.technician_id:
                     raise OrderWithoutTechnicianException()
 
+            if kwargs["status"] == ServiceOrderStatus.CANCELLED.value:
+                reason = kwargs.get("cancellation_reason") or order.cancellation_reason
+                if not reason:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Cancellation reason is required when cancelling an order"
+                    )
+
         return self.repo.update(order_id, **kwargs)
 
     def assign_technician(self, order_id: str, technician_id: str):
@@ -80,6 +88,15 @@ class ServiceOrderService:
             current_status = current_status.value
         if current_status == ServiceOrderStatus.COMPLETED.value:
             raise CompletedOrderNotEditableException()
+
+        # Check max 5 active orders
+        tech_orders = self.repo.find_by_technician_id(technician_id)
+        active_orders = [o for o in tech_orders if getattr(o.status, "value", str(o.status)) == ServiceOrderStatus.IN_PROGRESS.value]
+        if len(active_orders) >= 5:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Technician has reached the maximum of 5 concurrent orders"
+            )
 
         return self.repo.assign_technician(order_id, technician_id)
 
