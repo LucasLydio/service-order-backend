@@ -1,70 +1,102 @@
 # Service Order Management System
 
-A FastAPI backend for managing technical assistance service orders.
+Backend em FastAPI para gerenciar ordens de serviço (service orders).
 
-## Features
+## Principais recursos
 
-- User authentication with JWT
-- Password recovery with email validation
-- Customer management
-- Service order management
-- Rate limiting
-- Clean layered architecture
+- Autenticação JWT e recuperação de senha
+- Controle de perfis (RBAC): `admin`, `manager`, `client`
+- CRUD de clientes, peças e ordens de serviço
+- Controle de estoque e uso de peças (baixa automática)
+- Histórico de eventos (`history`) para operações importantes
+- Regras de negócio: limite de 5 ordens em andamento por técnico, motivo de cancelamento obrigatório, não editar OS concluída
+- Relatórios gerenciais básicos (`/reports`)
+- Rate limiting por IP
 
-## Prerequisites
+## Endpoints principais
+
+- `POST /auth/` — registro / login / recuperação de senha
+- `GET/POST/PUT/DELETE /customers`
+- `GET/POST/PUT/DELETE /parts`
+- `GET/POST/PUT/DELETE /service-orders` + ações específicas:
+  - `PATCH /service-orders/{id}/assign` — atribuir técnico (muda para `IN_PROGRESS`)
+  - `PATCH /service-orders/{id}/complete` — marcar concluída
+  - `PATCH /service-orders/{id}/cancel` — cancelar (motivo obrigatório)
+  - `POST /service-orders/{id}/parts/{part_id}` — usar peça na OS (baixa de estoque)
+- `GET /reports/*` — relatórios (tempo médio, peças mais usadas, OS por técnico, OS por status)
+
+## Pré-requisitos
 
 - Python 3.10+
 - MySQL 8.0+
 
-## Setup
+## Instalação e execução rápida
 
-1. Clone the repository
-2. Copy `.env.example` to `.env` and update the MySQL credentials
-3. Create a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-4. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-5. Create the database
-   - The project uses MySQL 8.0+ with the `mysql+pymysql://` SQLAlchemy URL format.
-6. Run migrations:
-   ```bash
-   alembic revision --autogenerate -m "create initial tables"
-   alembic upgrade head
-   ```
-   If you don't want to autogenerate a new revision, you can run `alembic upgrade head` using the existing migration(s).
+1. Clone o repositório
+2. Copie `.env.example` para `.env` e ajuste credenciais
+3. Crie e ative um ambiente virtual:
 
-   Note: this project uses UUIDs (stored as `CHAR(36)`) for primary/foreign keys. If you previously created tables with integer IDs, the simplest path is to recreate the database and run `alembic upgrade head` again.
-7. Create an admin user:
-   ```bash
-   python scripts/create_admin.py
-   ```
-8. If you want to create the initial demo data in one step, run:
-   ```bash
-   python scripts/bootstrap_database.py
-   ```
-9. Run the application:
-   ```bash
-   uvicorn app.main:app --reload
-   ```
+```bash
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# Linux / macOS
+source .venv/bin/activate
+```
 
-The API will be available at `http://localhost:8000`
+4. Instale dependências:
 
-## Project Structure
+```bash
+pip install -r requirements.txt
+```
 
-- `app/main.py` - FastAPI application entry point
-- `app/core/config.py` - Configuration management
-- `app/http/` - HTTP layer (controllers, routes, schemas, services)
-- `app/infra/` - Infrastructure layer (database, models, repositories)
-- `app/shared/` - Shared utilities (exceptions, responses, security)
-- `tests/` - Test suite
+5. Crie o banco MySQL e rode as migrações:
 
-## Roles (RBAC)
+```bash
+# aplicar todas as migrações existentes
+alembic upgrade head
+```
 
-- `admin` -> full access
-- `manager` -> customer and service order management except admin-only delete actions
-- `client` -> limited authenticated access
+Observação: foi adicionada uma migração adicional em `app/infra/migrations/versions/0006_add_service_order_timestamps_and_reason.py` que introduz campos de tempo de atendimento e motivo de cancelamento — certifique-se de aplicar as migrações no banco alvo.
+
+6. (Opcional) Criar admin e popular dados de demonstração:
+
+```bash
+python scripts/create_admin.py
+python scripts/bootstrap_database.py
+```
+
+7. Executar o servidor:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+A documentação interativa estará em `http://localhost:8000/docs` (Swagger).
+
+## Testes
+
+Instale o pytest e execute a suíte:
+
+```bash
+pip install pytest
+pytest tests/ -v
+```
+
+Na minha verificação local a suíte passou (6 tests).
+
+## Arquitetura e organização
+
+Estrutura em camadas (HTTP → Services → Repositories → Models). Principais pastas:
+
+- `app/http/` — controllers, routes, schemas, services
+- `app/infra/` — models, repositories, migrations
+- `app/shared/` — exceções, respostas, segurança
+
+## Observações finais
+
+- A branch `review/service-order-rules` contém mudanças recentes relacionadas às regras de negócio (limite de ordens por técnico, histórico, campos adicionados à `service_orders`) e já foi enviada ao remote para revisão.
+- Se for necessário alinhar o `README` com mais detalhes (ex.: exemplos de requests, coleção Postman em `docs/`), eu posso adicionar essas seções.
+
+---
+

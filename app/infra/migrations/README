@@ -1,3 +1,0 @@
-Alembic migrations live in this folder.
-
-This project uses UUIDs (stored as `CHAR(36)`) for primary/foreign keys.
