@@ -1,5 +1,6 @@
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+from datetime import datetime
 
 from app.infra.models.order_part_model import OrderPart
 from app.infra.models.part_model import Part
@@ -15,15 +16,25 @@ class ReportsRepository:
         completed_orders = (
             self.db.query(ServiceOrder)
             .filter(ServiceOrder.status == ServiceOrderStatus.COMPLETED)
-            .filter(ServiceOrder.updated_at.isnot(None))
             .all()
         )
 
-        durations = [
-            (order.updated_at - order.created_at).total_seconds()
-            for order in completed_orders
-            if order.created_at and order.updated_at
-        ]
+        def _safe_seconds(order) -> float:
+            service_time_seconds = getattr(order, "service_time_seconds", None)
+            if isinstance(service_time_seconds, (int, float)):
+                return float(service_time_seconds)
+
+            completed_at = getattr(order, "completed_at", None)
+            created_at = getattr(order, "created_at", None)
+            updated_at = getattr(order, "updated_at", None)
+
+            if isinstance(completed_at, datetime) and isinstance(created_at, datetime):
+                return float((completed_at - created_at).total_seconds())
+            if isinstance(updated_at, datetime) and isinstance(created_at, datetime):
+                return float((updated_at - created_at).total_seconds())
+            return 0.0
+
+        durations = [_safe_seconds(order) for order in completed_orders]
 
         average_seconds = sum(durations) / len(durations) if durations else 0
         return {

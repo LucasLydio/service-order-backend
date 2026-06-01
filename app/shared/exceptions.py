@@ -116,3 +116,19 @@ class OrderWithoutTechnicianException(HTTPException):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot complete an order without an assigned technician"
         )
+
+
+class TechnicianOrderLimitExceededException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Technician already has the maximum number of active service orders"
+        )
+
+
+class CancellationReasonRequiredException(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cancellation reason is required"
+        )

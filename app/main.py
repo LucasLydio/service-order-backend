@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.http.routes import auth_routes, customer_routes, service_order_routes
+from app.http.routes import auth_routes, customer_routes, part_routes, service_order_routes
 from app.infra.database.base import Base
 from app.infra.database.session import engine
 from app.infra.models.user_model import User  # noqa: F401
@@ -33,6 +33,7 @@ app.add_middleware(
 # Include routers
 app.include_router(auth_routes.router)
 app.include_router(customer_routes.router)
+app.include_router(part_routes.router)
 app.include_router(service_order_routes.router)
 
 

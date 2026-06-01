@@ -1,7 +1,7 @@
-import uuid
 import enum
+import uuid
 
-from sqlalchemy import Column, String, DateTime, Text, ForeignKey, Enum
+from sqlalchemy import Column, String, DateTime, Text, ForeignKey, Enum, Integer
 from sqlalchemy.sql import func
 from app.infra.database.base import Base
 
@@ -30,6 +30,9 @@ class ServiceOrder(Base):
     description = Column(Text, nullable=True)
     status = Column(Enum(ServiceOrderStatus), default=ServiceOrderStatus.PENDING)
     priority = Column(Enum(ServiceOrderPriority), default=ServiceOrderPriority.MEDIA)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    cancellation_reason = Column(Text, nullable=True)
+    service_time_seconds = Column(Integer, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

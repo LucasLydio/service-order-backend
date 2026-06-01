@@ -15,6 +15,15 @@ class ServiceOrderRepository:
     def find_by_technician_id(self, technician_id: str) -> list:
         return self.db.query(ServiceOrder).filter(ServiceOrder.technician_id == technician_id).all()
 
+    def count_active_by_technician(self, technician_id: str, exclude_order_id: str = None) -> int:
+        query = self.db.query(ServiceOrder).filter(
+            ServiceOrder.technician_id == technician_id,
+            ServiceOrder.status == ServiceOrderStatus.IN_PROGRESS,
+        )
+        if exclude_order_id:
+            query = query.filter(ServiceOrder.id != exclude_order_id)
+        return query.count()
+
     def create(self, customer_id: str, title: str, description: str = None, priority: str = "MEDIA") -> ServiceOrder:
         order = ServiceOrder(
             customer_id=customer_id,

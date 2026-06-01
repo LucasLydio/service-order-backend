@@ -7,6 +7,8 @@ from app.http.schemas.service_order_schema import (
     ServiceOrderCreateSchema,
     ServiceOrderUpdateSchema,
     ServiceOrderAssignSchema,
+    ServiceOrderCancelSchema,
+    ServiceOrderPartUseSchema,
     ServiceOrderResponseSchema,
 )
 from app.http.services.service_order_service import ServiceOrderService
@@ -26,8 +28,22 @@ def _serialize_order(order):
         "description": order.description,
         "status": getattr(order.status, "value", str(order.status)),
         "priority": getattr(order.priority, "value", str(order.priority)),
+        "completed_at": getattr(order, "completed_at", None),
+        "cancellation_reason": getattr(order, "cancellation_reason", None),
+        "service_time_seconds": getattr(order, "service_time_seconds", None),
         "created_at": order.created_at,
         "updated_at": order.updated_at,
+    }
+
+
+def _serialize_history_item(item):
+    return {
+        "id": item.id,
+        "event_type": item.event_type,
+        "description": item.description,
+        "service_order_id": item.service_order_id,
+        "part_id": item.part_id,
+        "created_at": item.created_at,
     }
 
 
@@ -97,6 +113,18 @@ def update_service_order(
     return success_response("Service order updated", _serialize_order(order))
 
 
+@router.patch("/{order_id}/cancel", response_model=StandardResponse)
+def cancel_service_order(
+    order_id: uuid.UUID,
+    data: ServiceOrderCancelSchema,
+    db: Session = Depends(get_db),
+    _current_user: dict = Depends(require_roles("admin", "manager")),
+):
+    service = ServiceOrderService(db)
+    order = service.cancel_service_order(str(order_id), data.reason)
+    return success_response("Service order cancelled", _serialize_order(order))
+
+
 @router.patch("/{order_id}/assign", response_model=StandardResponse)
 def assign_technician(
     order_id: uuid.UUID,
@@ -118,6 +146,30 @@ def complete_service_order(
     service = ServiceOrderService(db)
     order = service.complete_service_order(str(order_id))
     return success_response("Service order completed", _serialize_order(order))
+
+
+@router.post("/{order_id}/parts/{part_id}", response_model=StandardResponse)
+def use_part_on_order(
+    order_id: uuid.UUID,
+    part_id: uuid.UUID,
+    data: ServiceOrderPartUseSchema,
+    db: Session = Depends(get_db),
+    _current_user: dict = Depends(require_roles("admin", "manager", "technician")),
+):
+    service = ServiceOrderService(db)
+    result = service.use_part_on_order(str(order_id), str(part_id), data.quantity)
+    return success_response("Part applied to service order", result)
+
+
+@router.get("/{order_id}/history", response_model=StandardResponse)
+def list_order_history(
+    order_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    _current_user: dict = Depends(require_roles("admin", "manager", "technician")),
+):
+    service = ServiceOrderService(db)
+    history = service.list_order_history(str(order_id))
+    return success_response("Order history retrieved", [_serialize_history_item(item) for item in history])
 
 
 @router.delete("/{order_id}", response_model=StandardResponse)
