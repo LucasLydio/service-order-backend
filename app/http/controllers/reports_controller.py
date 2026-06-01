@@ -36,3 +36,11 @@ def get_orders_by_status(db: Session = Depends(get_db)) -> StandardResponse:
         "Orders by status report generated",
         repo.get_service_orders_by_status(),
     )
+
+
+def get_overdue_orders(days: int = 7, db: Session = Depends(get_db)) -> StandardResponse:
+    repo = ReportsRepository(db)
+    return success_response(
+        f"Overdue orders older than {days} days",
+        repo.get_overdue_service_orders(days=days),
+    )

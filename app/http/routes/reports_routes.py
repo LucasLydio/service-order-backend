@@ -4,6 +4,7 @@ from app.http.controllers.reports_controller import (
     get_most_used_parts,
     get_orders_by_status,
     get_orders_by_technician,
+    get_overdue_orders,
 )
 
 router = APIRouter(
@@ -33,4 +34,11 @@ router.add_api_route(
     "/orders-by-status",
     get_orders_by_status,
     methods=["GET"]
+)
+
+
+router.add_api_route(
+    "/overdue",
+    get_overdue_orders,
+    methods=["GET"],
 )

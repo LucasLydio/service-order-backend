@@ -6,6 +6,7 @@ from app.infra.models.order_part_model import OrderPart
 from app.infra.models.part_model import Part
 from app.infra.models.service_order_model import ServiceOrder, ServiceOrderStatus
 from app.infra.models.technician_model import Technician
+from datetime import timedelta
 
 
 class ReportsRepository:
@@ -101,3 +102,37 @@ class ReportsRepository:
             }
             for row in result
         ]
+
+    def get_overdue_service_orders(self, days: int = 7) -> list[dict]:
+        """Return service orders in IN_PROGRESS older than `days` days."""
+        now = datetime.utcnow()
+        threshold = now - timedelta(days=days)
+
+        result = (
+            self.db.query(ServiceOrder)
+            .filter(ServiceOrder.status == ServiceOrderStatus.IN_PROGRESS)
+            .filter(ServiceOrder.created_at < threshold)
+            .all()
+        )
+
+        overdue = []
+        for order in result:
+            created_at = getattr(order, "created_at", None)
+            age_days = None
+            if isinstance(created_at, datetime):
+                age_days = int((now - created_at).days)
+
+            overdue.append(
+                {
+                    "id": order.id,
+                    "title": getattr(order, "title", None),
+                    "customer_id": getattr(order, "customer_id", None),
+                    "technician_id": getattr(order, "technician_id", None),
+                    "status": getattr(order.status, "value", str(order.status)) if order.status else None,
+                    "priority": getattr(order.priority, "value", str(order.priority)) if order.priority else None,
+                    "created_at": created_at.isoformat() if getattr(created_at, "isoformat", None) else None,
+                    "age_days": age_days,
+                }
+            )
+
+        return overdue
